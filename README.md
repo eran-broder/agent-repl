@@ -1,69 +1,94 @@
 # agent-repl
 
-A Python REPL for AI agents with built-in tools and persistent state.
+A Python REPL for AI agents with persistent state across executions.
+
+## Why?
+
+AI agents using standard tools are **stateless** - each Python execution starts fresh. This forces agents to either:
+- Write everything in one massive script
+- Save/load state to files between calls
+- Re-compute everything each time
+
+**agent-repl solves this.** Variables, functions, and classes persist across calls:
+
+```bash
+PORT=$(repl create)
+repl exec $PORT "data = [1, 2, 3, 4, 5]"           # Define data
+repl exec $PORT "total = sum(data)"                # Use it later
+repl exec $PORT "avg = total / len(data)"          # Build on results
+repl exec $PORT "f'Average: {avg}'"                # Still accessible
+# [result] 'Average: 3.0'
+repl destroy $PORT
+```
+
+## Real Example: Multi-Step Codebase Analysis
+
+```bash
+PORT=$(repl create)
+
+# Step 1: Find files (state: py_files)
+repl exec $PORT "py_files = Glob('**/*.py', 'src')"
+
+# Step 2: Define analyzer class (state: CodeAnalyzer)
+repl exec $PORT "
+class CodeAnalyzer:
+    def __init__(self, path):
+        self.content = Read(path)
+    def line_count(self):
+        return len(self.content.splitlines())
+    def complexity(self):
+        return sum(self.content.count(kw) for kw in ['if ', 'for ', 'while '])
+"
+
+# Step 3: Analyze all files (state: results)
+repl exec $PORT "results = {f: CodeAnalyzer(f) for f in py_files}"
+
+# Step 4: Generate report (uses all previous state!)
+repl exec $PORT "
+total_lines = sum(a.line_count() for a in results.values())
+most_complex = max(results.items(), key=lambda x: x[1].complexity())
+f'Total: {total_lines} lines, Most complex: {most_complex[0]}'
+"
+
+repl destroy $PORT
+```
+
+**Without REPL:** This would require passing all state as parameters, writing temp files, or cramming everything into one script.
 
 ## Installation
 
-**Install with two commands:**
-
 ```bash
-# 1. Install the Python CLI
+# Install the CLI
 pip install git+https://github.com/eran-broder/agent-repl.git
 
-# 2. Install the Claude Code plugin
+# Install the Claude Code plugin
 claude plugin marketplace add eran-broder/agent-repl && claude plugin install agent-repl
 ```
 
-Or as a single line:
-
-```bash
-pip install git+https://github.com/eran-broder/agent-repl.git && claude plugin marketplace add eran-broder/agent-repl && claude plugin install agent-repl
-```
-
-## Features
-
-- **Process-based isolation**: Each REPL runs as a separate process
-- **Built-in tools**: Bash, Read, Write, Edit, Glob, Grep, Ls, Cd, Cwd, Env
-- **Persistent state**: Variables, functions, classes persist across calls
-- **No external dependencies**: Pure Python 3.11+
-
 ## Usage
 
-After installation, use the skill in Claude Code:
+### For Claude Code Users
+
+After installing the plugin, just ask Claude to do multi-step Python work - it will use the REPL automatically. Or invoke explicitly:
 
 ```
 /agent-repl:python-repl
 ```
-
-Or just ask Claude to do multi-step Python work - it will use the REPL automatically.
 
 ### CLI Commands
 
 ```bash
 repl create              # Create REPL, prints port
 repl exec <port> "code"  # Execute code
-repl show <port>         # Show namespace
+repl show <port>         # Show all variables/functions
 repl reset <port>        # Clear namespace
-repl destroy <port>      # Destroy REPL
+repl destroy <port>      # Shut down REPL
 repl check <port>        # Check if alive
 ```
 
-### Example
+### Built-in Tools
 
-```bash
-$ PORT=$(repl create)
-$ repl exec $PORT "x = 42"
-[OK]
-$ repl exec $PORT "x * 2"
-[result]
-84
-$ repl exec $PORT "files = Glob('*.py')"
-[OK]
-$ repl destroy $PORT
-[OK] REPL destroyed
-```
-
-### Built-in Tools (in REPL namespace)
+Available in the REPL namespace - no imports needed:
 
 | Tool | Description |
 |------|-------------|
@@ -78,18 +103,17 @@ $ repl destroy $PORT
 | `Cwd()` | Get current directory |
 | `Env(name)` | Get environment variable |
 
-## For AI Agents
+### Pre-imported
 
-Agents use the REPL via Bash:
+`os`, `sys`, `json`, `re`, `math`, `pathlib.Path`, `datetime`, `collections`, `itertools`, `functools`, `random`
 
-```bash
-PORT=$(repl create)
-repl exec $PORT "x = 42"
-repl exec $PORT "x * 2"   # Returns 84
-repl destroy $PORT
-```
+## Features
 
-Each agent can create its own isolated REPL instance.
+- **Persistent state**: Variables, functions, classes survive across `exec` calls
+- **Process isolation**: Each REPL is a separate process with its own namespace
+- **Built-in tools**: File operations, shell commands, glob/grep - ready to use
+- **Zero dependencies**: Pure Python 3.11+
+- **Agent-friendly**: Each agent/subagent can create its own isolated REPL
 
 ## License
 
