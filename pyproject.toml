@@ -22,13 +22,11 @@ dependencies = []
 
 [project.optional-dependencies]
 mcp = ["mcp>=1.2.0"]
-mcp-server = ["mcp[cli]>=1.2.0"]
 dev = ["pytest>=7.0.0", "pyright>=1.1.0"]
 
 [project.scripts]
 repl = "agent_repl.cli:main"
 agent-repl = "agent_repl.cli:main"
-agent-repl-mcp = "agent_repl.mcp_server:main"
 
 [project.urls]
 Homepage = "https://github.com/eran-broder/agent-repl"
