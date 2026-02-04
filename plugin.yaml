@@ -1,0 +1,11 @@
+name: agent-repl
+description: Python REPL for AI agents with persistent state, built-in tools, and MCP integration
+version: 0.1.0
+author: eran-broder
+repository: https://github.com/eran-broder/agent-repl
+
+skills:
+  - skill/python-repl
+
+setup:
+  - pip install git+https://github.com/eran-broder/agent-repl.git

@@ -12,14 +12,39 @@ A Python REPL for AI agents with built-in tools and MCP integration.
 
 ## Installation
 
+### Option 1: Claude Code Plugin (Recommended)
+
+Install as a Claude Code plugin to get the `/python-repl` skill:
+
 ```bash
-pip install agent-repl
+/plugin install agent-repl@github:eran-broder/agent-repl
+```
+
+This installs both the CLI tool and the skill that teaches Claude how to use it.
+
+### Option 2: Skill Only
+
+Copy the skill to your personal skills folder:
+
+```bash
+# Clone and copy skill
+git clone https://github.com/eran-broder/agent-repl.git
+cp -r agent-repl/skill/python-repl ~/.claude/skills/
+
+# Install the CLI
+pip install git+https://github.com/eran-broder/agent-repl.git
+```
+
+### Option 3: CLI Only
+
+```bash
+pip install git+https://github.com/eran-broder/agent-repl.git
 ```
 
 Or install from source:
 
 ```bash
-git clone https://github.com/anthropics/agent-repl.git
+git clone https://github.com/eran-broder/agent-repl.git
 cd agent-repl
 pip install -e .
 ```
@@ -103,6 +128,20 @@ If you have MCP servers configured in `~/.claude.json`, they are automatically a
 mcp.filesystem.read_file(path="/tmp/test.txt")
 mcp.memory.store(key="data", value="hello")
 ```
+
+## Claude Code Skill
+
+When installed as a plugin or skill, Claude Code learns how to use the REPL automatically.
+
+**Invoke manually:**
+```
+/python-repl new           # Create a REPL
+/python-repl show          # Show current state
+/python-repl reset         # Reset namespace
+/python-repl destroy       # Destroy REPL
+```
+
+**Or let Claude decide:** Just ask Claude to do multi-step Python work and it will use the REPL when appropriate.
 
 ## For AI Agents
 
