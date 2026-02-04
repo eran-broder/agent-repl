@@ -2,22 +2,22 @@
 
 A Python REPL for AI agents with built-in tools and persistent state.
 
-## One-Command Installation
+## Installation
 
-**Install everything with one command:**
-
-```bash
-pip install git+https://github.com/eran-broder/agent-repl.git && claude /plugin install agent-repl@github:eran-broder/agent-repl
-```
-
-Or step by step:
+**Install with two commands:**
 
 ```bash
-# 1. Install the CLI
+# 1. Install the Python CLI
 pip install git+https://github.com/eran-broder/agent-repl.git
 
-# 2. Install the Claude Code skill (inside Claude Code)
-/plugin install agent-repl@github:eran-broder/agent-repl
+# 2. Install the Claude Code plugin
+claude plugin marketplace add eran-broder/agent-repl && claude plugin install agent-repl
+```
+
+Or as a single line:
+
+```bash
+pip install git+https://github.com/eran-broder/agent-repl.git && claude plugin marketplace add eran-broder/agent-repl && claude plugin install agent-repl
 ```
 
 ## Features
