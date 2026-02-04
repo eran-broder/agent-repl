@@ -13,7 +13,7 @@
       "author": {
         "name": "eran-broder"
       },
-      "source": "..",
+      "source": ".",
       "category": "development",
       "keywords": ["python", "repl", "agent", "tools"]
     }
