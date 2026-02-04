@@ -6,7 +6,8 @@ A Python REPL for AI agents with built-in tools and MCP integration.
 
 - **Process-based isolation**: Each REPL runs as a separate process with its own namespace
 - **Built-in tools**: Bash, Read, Write, Edit, Glob, Grep, Ls, Cd, Cwd, Env
-- **MCP integration**: Auto-discovers MCP servers from `~/.claude.json`
+- **MCP server**: Expose REPL as native MCP tools (not just CLI)
+- **MCP client**: Auto-discovers MCP servers from `~/.claude.json`
 - **Socket communication**: REPLs communicate via localhost TCP sockets
 - **No persistence**: State lives only in running processes (radical simplicity)
 
@@ -143,22 +144,80 @@ When installed as a plugin or skill, Claude Code learns how to use the REPL auto
 
 **Or let Claude decide:** Just ask Claude to do multi-step Python work and it will use the REPL when appropriate.
 
+## MCP Server (Native Tools)
+
+For the best experience, run agent-repl as an MCP server. This exposes REPL operations as native tools instead of CLI commands.
+
+### Install with MCP server support
+
+```bash
+pip install "agent-repl[mcp-server] @ git+https://github.com/eran-broder/agent-repl.git"
+```
+
+### Configure in Claude Code
+
+Add to `~/.claude.json`:
+
+```json
+{
+  "mcpServers": {
+    "python-repl": {
+      "command": "agent-repl-mcp"
+    }
+  }
+}
+```
+
+Or with full path:
+
+```json
+{
+  "mcpServers": {
+    "python-repl": {
+      "command": "python",
+      "args": ["-m", "agent_repl.mcp_server"]
+    }
+  }
+}
+```
+
+### Available MCP Tools
+
+Once configured, these tools are available natively:
+
+| Tool | Description |
+|------|-------------|
+| `python_repl_create()` | Create new REPL, returns port |
+| `python_repl_exec(port, code)` | Execute Python code |
+| `python_repl_show(port)` | Show namespace variables |
+| `python_repl_reset(port)` | Clear namespace |
+| `python_repl_check(port)` | Check if REPL is alive |
+| `python_repl_destroy(port)` | Destroy REPL |
+
+Claude will call these directly as tools, not via Bash.
+
 ## For AI Agents
 
 This REPL is designed for AI agents like Claude Code. Agents can:
 
-1. Create a REPL: `repl create` → returns port
-2. Execute code: `repl exec <port> "<code>"`
-3. Maintain state across executions
-4. Use built-in tools and MCP tools
-5. Destroy when done: `repl destroy <port>`
+**Via MCP tools (recommended):**
+1. `python_repl_create()` → returns `{port: 12345}`
+2. `python_repl_exec(12345, "x = 42")` → execute code
+3. `python_repl_show(12345)` → see variables
+4. `python_repl_destroy(12345)` → cleanup
+
+**Via CLI (fallback):**
+1. `Bash("repl create")` → returns port
+2. `Bash("repl exec <port> '<code>'")`  → execute code
+3. `Bash("repl destroy <port>")` → cleanup
 
 Each agent (including subagents) can create its own REPL instance.
 
 ## Requirements
 
 - Python 3.11+
-- No external dependencies (MCP integration is optional)
+- No external dependencies for CLI
+- Optional: `mcp[cli]>=1.2.0` for MCP server
 
 ## License
 

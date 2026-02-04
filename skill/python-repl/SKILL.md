@@ -2,7 +2,6 @@
 name: python-repl
 description: Use a persistent Python REPL for multi-step computations, data analysis, and stateful code execution. Invoke when you need to run Python code that builds on previous results, define reusable functions, or work with data across multiple steps.
 argument-hint: "[code or 'new' or 'show' or 'reset' or 'destroy']"
-allowed-tools: Bash(repl *)
 ---
 
 # Python REPL Skill
@@ -17,24 +16,40 @@ Use this skill when you need **persistent Python state** across multiple executi
 - Working with state that persists across commands
 - Quick prototyping without creating files
 
-## Quick Start
+## How to Use
 
-```bash
-# Create a new REPL (returns port number)
-repl create
+**If MCP tools are available** (check for `python_repl_create` tool):
 
-# Execute code (use the port from create)
-repl exec <port> "x = 42"
-repl exec <port> "x * 2"  # Returns 84
-
-# Show all variables
-repl show <port>
-
-# When done
-repl destroy <port>
+```
+python_repl_create() → {"port": 12345}
+python_repl_exec(port=12345, code="x = 42") → {"result": null, "stdout": "", "error": null}
+python_repl_exec(port=12345, code="x * 2") → {"result": "84", "stdout": "", "error": null}
+python_repl_show(port=12345) → {"namespace": "x: int = 42"}
+python_repl_destroy(port=12345) → {"ok": true}
 ```
 
-## Commands
+**If using CLI via Bash** (fallback):
+
+```bash
+repl create                    # Returns port number
+repl exec <port> "x = 42"      # Execute code
+repl exec <port> "x * 2"       # Returns 84
+repl show <port>               # Show variables
+repl destroy <port>            # Cleanup
+```
+
+## MCP Tools Reference
+
+| Tool | Parameters | Description |
+|------|------------|-------------|
+| `python_repl_create` | none | Create new REPL, returns port |
+| `python_repl_exec` | `port`, `code` | Execute Python code |
+| `python_repl_show` | `port` | Show namespace variables |
+| `python_repl_reset` | `port` | Clear namespace |
+| `python_repl_check` | `port` | Check if REPL is alive |
+| `python_repl_destroy` | `port` | Destroy REPL |
+
+## CLI Commands Reference
 
 | Command | Description |
 |---------|-------------|
@@ -45,9 +60,9 @@ repl destroy <port>
 | `repl check <port>` | Check if REPL is alive |
 | `repl destroy <port>` | Shut down REPL |
 
-## Built-in Tools Available
+## Built-in Tools in REPL Namespace
 
-The REPL has these tools pre-loaded in the namespace:
+The REPL has these tools pre-loaded:
 
 | Tool | Usage |
 |------|-------|
@@ -64,41 +79,28 @@ The REPL has these tools pre-loaded in the namespace:
 
 ## Standard Library
 
-These modules are pre-imported: `os`, `sys`, `json`, `re`, `math`, `pathlib`, `datetime`, `collections`, `itertools`, `functools`, `random`
-
-Also available: `Path` from pathlib
-
-## MCP Tools
-
-If MCP servers are configured in `~/.claude.json`, they're available via `mcp.<server>.<tool>()`:
-
-```python
-mcp.filesystem.read_file(path="/tmp/test.txt")
-mcp.memory.store(key="data", value="hello")
-```
+Pre-imported: `os`, `sys`, `json`, `re`, `math`, `pathlib`, `datetime`, `collections`, `itertools`, `functools`, `random`, `Path`
 
 ## Workflow Pattern
 
-1. **Start**: `repl create` → save the port
-2. **Work**: `repl exec <port> "<code>"` repeatedly
-3. **Check**: `repl show <port>` to see state
-4. **Finish**: `repl destroy <port>` when done
+1. **Start**: Create REPL → save the port
+2. **Work**: Execute code repeatedly, building on previous results
+3. **Check**: Show namespace to see current state
+4. **Finish**: Destroy REPL when done
 
 ## Examples
 
-### Data Analysis
+### Data Analysis (MCP tools)
 
-```bash
-PORT=$(repl create)
-repl exec $PORT "data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
-repl exec $PORT "avg = sum(data) / len(data)"
-repl exec $PORT "variance = sum((x - avg) ** 2 for x in data) / len(data)"
-repl exec $PORT "import math; std_dev = math.sqrt(variance)"
-repl exec $PORT "f'Mean: {avg}, Std Dev: {std_dev:.2f}'"
-repl destroy $PORT
+```
+python_repl_create() → port=54321
+python_repl_exec(54321, "data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]")
+python_repl_exec(54321, "avg = sum(data) / len(data)")
+python_repl_exec(54321, "f'Mean: {avg}'") → "Mean: 5.5"
+python_repl_destroy(54321)
 ```
 
-### File Processing
+### File Processing (CLI)
 
 ```bash
 PORT=$(repl create)
@@ -109,27 +111,41 @@ repl exec $PORT "sorted(line_counts.items(), key=lambda x: -x[1])"
 repl destroy $PORT
 ```
 
-### Define and Test Functions
+### Define Functions
 
-```bash
-PORT=$(repl create)
-repl exec $PORT "def fibonacci(n):
-    if n <= 1: return n
-    return fibonacci(n-1) + fibonacci(n-2)"
-repl exec $PORT "[fibonacci(i) for i in range(10)]"
-repl destroy $PORT
+```
+python_repl_create() → port=54321
+python_repl_exec(54321, "def factorial(n): return 1 if n <= 1 else n * factorial(n-1)")
+python_repl_exec(54321, "factorial(10)") → "3628800"
+python_repl_destroy(54321)
 ```
 
 ## Tips
 
-- Always save the port from `repl create`
-- Quote code properly: `repl exec $PORT "code here"`
-- Use `repl show` to inspect current state
-- Use `repl reset` to clear variables without restarting
-- Destroy REPLs when done to free resources
+- Always save the port from create
+- Use show to inspect current state when debugging
+- Use reset to clear variables without restarting
+- Always destroy REPLs when done to free resources
+- Each agent/subagent should create its own REPL
 
 ## Installation
 
 ```bash
+# With MCP server support (recommended)
+pip install "agent-repl[mcp-server] @ git+https://github.com/eran-broder/agent-repl.git"
+
+# CLI only
 pip install git+https://github.com/eran-broder/agent-repl.git
+```
+
+Configure MCP server in `~/.claude.json`:
+
+```json
+{
+  "mcpServers": {
+    "python-repl": {
+      "command": "agent-repl-mcp"
+    }
+  }
+}
 ```
