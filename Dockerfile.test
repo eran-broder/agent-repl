@@ -1,0 +1,44 @@
+# Test environment: Claude Code + agent-repl skill
+FROM python:3.11-slim
+
+# Install Node.js (required for Claude Code)
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Claude Code globally
+RUN npm install -g @anthropic-ai/claude-code
+
+# Create non-root user
+RUN useradd -m -s /bin/bash testuser
+USER testuser
+WORKDIR /home/testuser
+
+# Install agent-repl from GitHub
+RUN pip install --user git+https://github.com/eran-broder/agent-repl.git
+
+# Add local bin to PATH
+ENV PATH="/home/testuser/.local/bin:${PATH}"
+
+# Create skill directory and copy skill
+RUN mkdir -p /home/testuser/.claude/skills/python-repl
+COPY --chown=testuser:testuser skill/python-repl/SKILL.md /home/testuser/.claude/skills/python-repl/
+
+# Create a test workspace
+RUN mkdir -p /home/testuser/workspace
+WORKDIR /home/testuser/workspace
+
+# Create a simple test file
+RUN echo "Hello from Docker test!" > hello.txt
+
+# Verify installations
+RUN echo "=== Verifying ===" && \
+    which repl && repl --help && \
+    which claude && claude --version
+
+# Interactive shell for testing
+CMD ["bash"]
