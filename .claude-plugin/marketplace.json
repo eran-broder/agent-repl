@@ -1,0 +1,21 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "agent-repl",
+  "description": "Python REPL for AI agents with persistent state and built-in tools",
+  "owner": {
+    "name": "eran-broder"
+  },
+  "plugins": [
+    {
+      "name": "agent-repl",
+      "description": "Python REPL for AI agents with persistent state and built-in tools (Bash, Read, Write, Glob, Grep, etc.)",
+      "version": "0.1.0",
+      "author": {
+        "name": "eran-broder"
+      },
+      "source": "..",
+      "category": "development",
+      "keywords": ["python", "repl", "agent", "tools"]
+    }
+  ]
+}
