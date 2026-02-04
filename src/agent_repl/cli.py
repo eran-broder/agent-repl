@@ -25,9 +25,9 @@ def format_result(response: dict) -> str:  # type: ignore[type-arg]
     return "\n\n".join(parts)
 
 
-def cmd_create() -> None:
+def cmd_create(enable_mcp: bool = False) -> None:
     """Create a new REPL, print its port."""
-    port = manager.start_repl()
+    port = manager.start_repl(enable_mcp=enable_mcp)
     print(port)
 
 
@@ -74,7 +74,8 @@ def main() -> None:
     )
     sub = parser.add_subparsers(dest="cmd", required=True)
 
-    sub.add_parser("create", help="Create REPL, prints port")
+    p = sub.add_parser("create", help="Create REPL, prints port")
+    p.add_argument("--mcp", action="store_true", help="Enable MCP tools in REPL (slower startup)")
 
     p = sub.add_parser("exec", help="Execute code")
     p.add_argument("port", type=int)
@@ -95,7 +96,7 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.cmd == "create":
-        cmd_create()
+        cmd_create(enable_mcp=args.mcp)
     elif args.cmd == "exec":
         cmd_exec(args.port, args.code)
     elif args.cmd == "show":

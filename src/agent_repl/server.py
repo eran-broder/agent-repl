@@ -105,9 +105,9 @@ def format_namespace(namespace: dict[str, Any]) -> str:
     return "\n".join(lines) if lines else "(empty)"
 
 
-def run_server(port: int) -> None:
+def run_server(port: int, enable_mcp: bool = True) -> None:
     """Run the REPL server on given port."""
-    namespace = create_namespace()
+    namespace = create_namespace(enable_mcp=enable_mcp)
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -148,5 +148,8 @@ def run_server(port: int) -> None:
 
 
 if __name__ == "__main__":
+    import os
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 0
-    run_server(port)
+    # Disable MCP if AGENT_REPL_NO_MCP is set (to avoid slow startup)
+    enable_mcp = os.environ.get("AGENT_REPL_NO_MCP") != "1"
+    run_server(port, enable_mcp=enable_mcp)
