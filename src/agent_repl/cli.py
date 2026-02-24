@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import argparse
+import io
+import sys
 
 from . import client, manager
 
@@ -68,6 +70,11 @@ def cmd_check(port: int) -> None:
 
 def main() -> None:
     """CLI entry point."""
+    if hasattr(sys.stdout, "buffer"):
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "buffer"):
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+
     parser = argparse.ArgumentParser(
         prog="repl",
         description="Python REPL for AI agents",

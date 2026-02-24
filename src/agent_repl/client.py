@@ -5,8 +5,8 @@ import json
 import socket
 from typing import Any
 
-BUFFER_SIZE = 65536
-TIMEOUT = 30.0
+CHUNK_SIZE = 65536
+TIMEOUT = 300.0  # 5 minutes — long-running RPC/analysis code needs time
 
 
 def send_command(port: int, action: str, **kwargs: Any) -> dict[str, Any]:
@@ -17,7 +17,17 @@ def send_command(port: int, action: str, **kwargs: Any) -> dict[str, Any]:
         sock.settimeout(TIMEOUT)
         sock.connect(("127.0.0.1", port))
         sock.sendall(json.dumps(msg).encode("utf-8"))
-        response = sock.recv(BUFFER_SIZE).decode("utf-8")
+        # Read until connection closes — handles large responses
+        chunks: list[bytes] = []
+        while True:
+            try:
+                chunk = sock.recv(CHUNK_SIZE)
+                if not chunk:
+                    break
+                chunks.append(chunk)
+            except socket.timeout:
+                break
+        response = b"".join(chunks).decode("utf-8")
 
     return json.loads(response)
 

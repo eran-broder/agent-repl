@@ -119,7 +119,20 @@ def run_server(port: int, enable_mcp: bool = True) -> None:
         while True:
             conn, _ = sock.accept()
             with conn:
-                data = conn.recv(BUFFER_SIZE).decode("utf-8")
+                # Shutdown write side from client signals end-of-request
+                chunks: list[bytes] = []
+                while True:
+                    chunk = conn.recv(BUFFER_SIZE)
+                    if not chunk:
+                        break
+                    chunks.append(chunk)
+                    # Client sends JSON then closes write half — try parsing
+                    try:
+                        json.loads(b"".join(chunks))
+                        break  # valid JSON, stop reading
+                    except json.JSONDecodeError:
+                        continue  # incomplete, keep reading
+                data = b"".join(chunks).decode("utf-8")
                 if not data:
                     continue
 
