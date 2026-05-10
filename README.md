@@ -1,94 +1,83 @@
 # agent-repl
 
-A Python REPL for AI agents with persistent state across executions.
+Persistent **Python** and **Node.js** REPLs for AI agents. Pick the one that fits the task — both ship in this repo with the same shape.
 
 ## Why?
 
-AI agents using standard tools are **stateless** - each Python execution starts fresh. This forces agents to either:
+AI agents using standard tools are **stateless** - each execution starts fresh. This forces agents to either:
 - Write everything in one massive script
 - Save/load state to files between calls
 - Re-compute everything each time
 
-**agent-repl solves this.** Variables, functions, and classes persist across calls:
+**agent-repl solves this.** Variables, functions, and classes persist across calls.
 
 ```bash
+# Python
 PORT=$(repl create)
-repl exec $PORT "data = [1, 2, 3, 4, 5]"           # Define data
-repl exec $PORT "total = sum(data)"                # Use it later
-repl exec $PORT "avg = total / len(data)"          # Build on results
-repl exec $PORT "f'Average: {avg}'"                # Still accessible
-# [result] 'Average: 3.0'
+repl exec $PORT "data = [1, 2, 3, 4, 5]"
+repl exec $PORT "total = sum(data)"
+repl exec $PORT "f'Average: {total / len(data)}'"
 repl destroy $PORT
+
+# Node
+PORT=$(nrepl create)
+nrepl exec $PORT "const data = [1, 2, 3, 4, 5]"
+nrepl exec $PORT "const total = data.reduce((a,b)=>a+b, 0)"
+nrepl exec $PORT "\`Average: \${total / data.length}\`"
+nrepl destroy $PORT
 ```
 
-## Real Example: Multi-Step Codebase Analysis
+Two engines, same protocol, same CLI shape.
 
-```bash
-PORT=$(repl create)
+## Two REPLs, one repo
 
-# Step 1: Find files (state: py_files)
-repl exec $PORT "py_files = Glob('**/*.py', 'src')"
+| Implementation | Language | CLI binaries | Path |
+|----------------|----------|--------------|------|
+| Python REPL    | Python 3.11+ | `repl`, `agent-repl` | `src/agent_repl/` |
+| Node REPL      | Node 20+    | `nrepl`, `node-agent-repl` | `node/` |
 
-# Step 2: Define analyzer class (state: CodeAnalyzer)
-repl exec $PORT "
-class CodeAnalyzer:
-    def __init__(self, path):
-        self.content = Read(path)
-    def line_count(self):
-        return len(self.content.splitlines())
-    def complexity(self):
-        return sum(self.content.count(kw) for kw in ['if ', 'for ', 'while '])
-"
-
-# Step 3: Analyze all files (state: results)
-repl exec $PORT "results = {f: CodeAnalyzer(f) for f in py_files}"
-
-# Step 4: Generate report (uses all previous state!)
-repl exec $PORT "
-total_lines = sum(a.line_count() for a in results.values())
-most_complex = max(results.items(), key=lambda x: x[1].complexity())
-f'Total: {total_lines} lines, Most complex: {most_complex[0]}'
-"
-
-repl destroy $PORT
-```
-
-**Without REPL:** This would require passing all state as parameters, writing temp files, or cramming everything into one script.
+Each is independent. Install one, the other, or both.
 
 ## Installation
 
+### Python REPL
 ```bash
-# Install the CLI
 pip install git+https://github.com/eran-broder/agent-repl.git
-
-# Install the Claude Code plugin
-claude plugin marketplace add eran-broder/agent-repl && claude plugin install agent-repl
 ```
 
-## Usage
-
-### For Claude Code Users
-
-After installing the plugin, just ask Claude to do multi-step Python work - it will use the REPL automatically. Or invoke explicitly:
-
-```
-/agent-repl:python-repl
+### Node REPL
+```bash
+npm install -g github:eran-broder/agent-repl#main:/node
+# or, from a clone:
+cd node && npm install -g .
 ```
 
-### CLI Commands
+### Claude Code plugin
+```bash
+claude plugin marketplace add eran-broder/agent-repl
+claude plugin install agent-repl
+```
+
+The plugin ships two skills — `python-repl` and `node-repl`. Pick whichever fits.
+
+## CLI
+
+Both implementations expose the same six subcommands:
 
 ```bash
-repl create              # Create REPL, prints port
-repl exec <port> "code"  # Execute code
-repl show <port>         # Show all variables/functions
-repl reset <port>        # Clear namespace
-repl destroy <port>      # Shut down REPL
-repl check <port>        # Check if alive
+<bin> create              # Create REPL, prints port
+<bin> exec <port> "code"  # Execute code
+<bin> show <port>         # Show user-defined names
+<bin> reset <port>        # Clear namespace
+<bin> destroy <port>      # Shut down REPL
+<bin> check <port>        # Check if alive
 ```
 
-### Built-in Tools
+`<bin>` is `repl` (Python) or `nrepl` (Node).
 
-Available in the REPL namespace - no imports needed:
+## Built-in tools
+
+Each REPL exposes these tools in its namespace — no imports needed:
 
 | Tool | Description |
 |------|-------------|
@@ -96,24 +85,27 @@ Available in the REPL namespace - no imports needed:
 | `Read(path)` | Read file contents |
 | `Write(path, content)` | Write to file |
 | `Edit(path, old, new)` | Replace text in file |
-| `Glob(pattern)` | Find files by pattern |
-| `Grep(pattern)` | Search file contents |
-| `Ls(path)` | List directory |
+| `Glob(pattern, path?)` | Find files by pattern |
+| `Grep(pattern, ...)` | Search file contents |
+| `Ls(path?)` | List directory |
 | `Cd(path)` | Change directory |
 | `Cwd()` | Get current directory |
-| `Env(name)` | Get environment variable |
+| `Env(name)` | Get/set environment variable |
 
-### Pre-imported
+## Pre-loaded modules
 
-`os`, `sys`, `json`, `re`, `math`, `pathlib.Path`, `datetime`, `collections`, `itertools`, `functools`, `random`
+| Python | Node |
+|--------|------|
+| `os`, `sys`, `json`, `re`, `math`, `pathlib.Path`, `datetime`, `collections`, `itertools`, `functools`, `random` | `fs`, `path`, `os`, `crypto`, `util`, `url`, `child_process` (plus globals: `Buffer`, `process`, `URL`, `fetch`, `setTimeout`, ...) |
 
 ## Features
 
-- **Persistent state**: Variables, functions, classes survive across `exec` calls
-- **Process isolation**: Each REPL is a separate process with its own namespace
-- **Built-in tools**: File operations, shell commands, glob/grep - ready to use
-- **Zero dependencies**: Pure Python 3.11+
-- **Agent-friendly**: Each agent/subagent can create its own isolated REPL
+- **Persistent state**: variables, functions, classes survive across `exec` calls
+- **Process isolation**: each REPL is its own process with its own namespace
+- **Built-in tools**: file ops, shell, glob/grep — ready to use
+- **Zero runtime dependencies**
+- **Top-level await** (Node) and full statement/expression support (both)
+- **Agent-friendly**: each agent/subagent can spin up its own isolated REPL
 
 ## License
 

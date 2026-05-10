@@ -1,5 +1,5 @@
 """
-Agent REPL - Python REPL for AI agents with built-in tools and MCP integration.
+Agent REPL - Python REPL for AI agents with built-in tools.
 
 Create persistent Python environments that any AI agent can use.
 State lives in memory - no file persistence.

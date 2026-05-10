@@ -11,13 +11,10 @@ from typing import Any
 from .tools import TOOLS
 
 BUFFER_SIZE = 65536
-_mcp_namespace: Any = None
 
 
-def create_namespace(enable_mcp: bool = True) -> dict[str, Any]:
-    """Create initial namespace with modules, tools, and MCP integration."""
-    global _mcp_namespace
-
+def create_namespace() -> dict[str, Any]:
+    """Create initial namespace with modules and built-in tools."""
     ns: dict[str, Any] = {"__name__": "__repl__", "__builtins__": __builtins__}
 
     # Standard library modules
@@ -34,20 +31,6 @@ def create_namespace(enable_mcp: bool = True) -> dict[str, Any]:
 
     # Built-in tools
     ns.update(TOOLS)
-
-    # MCP tools (lazy initialization)
-    if enable_mcp:
-        if _mcp_namespace is None:
-            try:
-                from .mcp_client import discover_mcp_tools
-
-                _mcp_namespace = discover_mcp_tools()
-            except Exception as e:
-                print(f"MCP discovery failed: {e}", file=sys.stderr)
-                _mcp_namespace = None
-
-        if _mcp_namespace is not None:
-            ns["mcp"] = _mcp_namespace
 
     return ns
 
@@ -89,7 +72,7 @@ def format_namespace(namespace: dict[str, Any]) -> str:
     skip = {
         "__name__", "__builtins__", "__doc__",
         "os", "sys", "json", "re", "math", "pathlib",
-        "datetime", "collections", "itertools", "functools", "random", "Path", "mcp",
+        "datetime", "collections", "itertools", "functools", "random", "Path",
         *TOOLS.keys(),
     }
     lines = []
@@ -105,9 +88,9 @@ def format_namespace(namespace: dict[str, Any]) -> str:
     return "\n".join(lines) if lines else "(empty)"
 
 
-def run_server(port: int, enable_mcp: bool = True) -> None:
+def run_server(port: int) -> None:
     """Run the REPL server on given port."""
-    namespace = create_namespace(enable_mcp=enable_mcp)
+    namespace = create_namespace()
 
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -161,8 +144,5 @@ def run_server(port: int, enable_mcp: bool = True) -> None:
 
 
 if __name__ == "__main__":
-    import os
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 0
-    # Disable MCP if AGENT_REPL_NO_MCP is set (to avoid slow startup)
-    enable_mcp = os.environ.get("AGENT_REPL_NO_MCP") != "1"
-    run_server(port, enable_mcp=enable_mcp)
+    run_server(port)

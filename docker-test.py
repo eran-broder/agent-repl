@@ -196,29 +196,6 @@ def main() -> int:
     else:
         print(f"WARN: After reset, x still exists: {output}")
 
-    # Test 13: MCP integration
-    test_section("TEST 13: MCP Integration")
-    output = run(f'repl exec {port} "mcp"')
-    if "MCPNamespace" in output:
-        print("PASS: MCP namespace exists")
-        print(output)
-
-        # Try to list MCP servers
-        output = run(f'repl exec {port} "dir(mcp)"')
-        print(f"MCP servers: {output}")
-
-        if "filesystem" in output:
-            print("PASS: Filesystem MCP server connected")
-            # Try using the filesystem server
-            output = run(f'repl exec {port} "mcp.filesystem.read_file(path=\\"/home/testuser/testdata/hello.txt\\")"')
-            if "Hello" in output:
-                print("PASS: MCP filesystem.read_file works!")
-                print(output)
-            else:
-                print(f"MCP filesystem output: {output}")
-    else:
-        print(f"INFO: MCP not available (expected if no MCP servers configured): {output}")
-
     # Test 14: Error handling
     test_section("TEST 14: Error Handling")
     output = run(f'repl exec {port} "1/0"')

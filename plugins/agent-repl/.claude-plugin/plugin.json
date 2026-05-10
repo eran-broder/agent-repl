@@ -1,11 +1,11 @@
 {
   "name": "agent-repl",
-  "description": "Python REPL for AI agents with persistent state and built-in tools (Bash, Read, Write, Glob, Grep, etc.)",
+  "description": "Persistent Python and Node.js REPLs for AI agents with built-in tools (Bash, Read, Write, Glob, Grep, etc.)",
   "version": "0.1.0",
   "author": {
     "name": "eran-broder"
   },
   "repository": "https://github.com/eran-broder/agent-repl",
   "license": "MIT",
-  "keywords": ["python", "repl", "agent", "tools"]
+  "keywords": ["python", "node", "javascript", "repl", "agent", "tools"]
 }

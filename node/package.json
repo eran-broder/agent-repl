@@ -1,0 +1,34 @@
+{
+  "name": "agent-repl-node",
+  "version": "0.1.0",
+  "description": "Node.js REPL for AI agents with persistent state and built-in tools",
+  "license": "MIT",
+  "repository": "github:eran-broder/agent-repl",
+  "keywords": [
+    "ai",
+    "agent",
+    "repl",
+    "nodejs",
+    "javascript",
+    "claude",
+    "llm"
+  ],
+  "main": "src/index.js",
+  "bin": {
+    "nrepl": "src/cli.js",
+    "node-agent-repl": "src/cli.js"
+  },
+  "scripts": {
+    "test": "node --test --test-concurrency=1 test/repl.test.js test/tools.test.js test/cli.test.js test/transform.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "dependencies": {
+    "acorn": "^8.16.0"
+  }
+}

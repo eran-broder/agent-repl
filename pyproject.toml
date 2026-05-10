@@ -1,11 +1,11 @@
 [project]
 name = "agent-repl"
 version = "0.1.0"
-description = "Python REPL for AI agents with built-in tools and MCP integration"
+description = "Python REPL for AI agents with built-in tools"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [{name = "Agent REPL Contributors"}]
-keywords = ["ai", "agent", "repl", "python", "mcp", "claude", "llm"]
+keywords = ["ai", "agent", "repl", "python", "claude", "llm"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -21,7 +21,6 @@ requires-python = ">=3.11"
 dependencies = []
 
 [project.optional-dependencies]
-mcp = ["mcp>=1.2.0"]
 dev = ["pytest>=7.0.0", "pyright>=1.1.0"]
 
 [project.scripts]
